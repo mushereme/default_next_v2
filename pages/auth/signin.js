@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Helmet } from 'react-helmet-async';
 
 import AuthLayout from "../../layouts/Auth";
-
+import SignIn from "../../components/auth/signin";
 
 /************************************************************************************************************************
                                               START: MAIN INFORMATION 
@@ -39,7 +39,8 @@ export default function IndexPage() {
     <div>
       <Helmet title="Sign in"/>
       <AuthLayout>
-        {t("Welcome back")}
+        {/* {t("Welcome back")} */}
+        <SignIn />
       </AuthLayout>
     </div>
   )

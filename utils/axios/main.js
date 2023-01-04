@@ -1,14 +1,12 @@
 import axios from "../axios";
 import https from "https";
 
-import { mainConfig } from "../../config/config";
-
 export const loadApi = async (props) => {
     
   let query, subqueries;
   
   var config = {
-    url: mainConfig.BACKEND_URL + props.url,
+    url: props.url,
     method: props.method,
     header: {
       headers: {

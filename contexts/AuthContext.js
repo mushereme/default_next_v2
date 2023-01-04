@@ -4,8 +4,6 @@ import { useRouter } from 'next/router'
 import { loadApi } from "../utils/axios/main";
 import { isValidToken, setSession } from "../utils/jwt.js";
 
-const AuthContext = createContext();
-
 
 /************************************************************************************************************************
                                               START: MAIN INFORMATION 
@@ -33,8 +31,9 @@ const AuthContext = createContext();
 const debug = true;  // if true console will be visible
 /**************************************************** END: DEBUG ********************************************************/
 
+const AuthContext = createContext();
 
-export const AuthStore = (props) => {
+const AuthProvider = (props) => {
 
   const initialState = {
     loading: false,
@@ -85,10 +84,20 @@ export const AuthStore = (props) => {
     console.log("$:/context/auth/signin/response ", response);
   };
 
+  const signUp = async (email, password) => {
+
+    let body = { email, password };
+    const response = await axios.post("/users/login", body);
+
+    console.log("$:/context/auth/signin/response ", response);
+  };
+
   return (
     <AuthContext.Provider
       value={{
         state,
+        signIn,
+        signUp,
       }}
     >
       {props.children}
@@ -96,5 +105,4 @@ export const AuthStore = (props) => {
   );
 };
 
-
-export default AuthContext;
+export { AuthContext, AuthProvider };
