@@ -13,13 +13,14 @@ import {
 const SignIn = () => {
   
   const { t } = useTranslation();
-  const router = useRouter();
-  const { state, signIn } = useAuth();
+  const { state, signIn, } = useAuth();
 
   const { form } = Form.useForm();
 
   const handleFinish = (values) => {
-    console.log("$:/signin/values", values);
+    // console.log("$:/signin/values", values);
+
+    signIn(values);
   }
 
   return (
@@ -31,9 +32,12 @@ const SignIn = () => {
         password: "1234"
       }}
       onFinish={handleFinish}
+      disabled={state.loading}
     >
       {state.error && (
-        <Alert type="error" message={state.error} banner />
+        <div className="mb-4">
+          <Alert type="error" message={state.error} banner />
+        </div>
       )}
       <Form.Item
         label={t("form_auth_label_email")}

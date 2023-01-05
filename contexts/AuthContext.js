@@ -1,9 +1,8 @@
 import React, { createContext, useEffect, useState } from "react";
 import { useRouter } from 'next/router'
 
-import { loadApi } from "../utils/axios/main";
+import axios from "../utils/axios";
 import { isValidToken, setSession } from "../utils/jwt.js";
-
 
 /************************************************************************************************************************
                                               START: MAIN INFORMATION 
@@ -11,7 +10,7 @@ import { isValidToken, setSession } from "../utils/jwt.js";
 
 	Created By		: Munkh-Erdne   
 	Date			    : 2022-11-05
-	Function		  : Banner context
+	Function		  : Auth context
 
 	Modification History: 
     Change code: 
@@ -20,28 +19,24 @@ import { isValidToken, setSession } from "../utils/jwt.js";
   --------------------------------------------------------------------------------------------------------
   Modify Date    App Version    Modified By    Change Code    Reason for modification   Summary 
   -------------------------------------------------------------------------------------------------------- 
-  2022-11-05     v1.0.0         Munkh-erdene   01             Bug fixing                Uploader not working properly 
 
 =========================================================================================================================
                                                  END: MAIN INFORMATION
 =========================================================================================================================
 *************************************************************************************************************************/
 
-/*************************************************** START: DEBUG *******************************************************/
-const debug = true;  // if true console will be visible
-/**************************************************** END: DEBUG ********************************************************/
-
 const AuthContext = createContext();
 
-const AuthProvider = (props) => {
+const initialState = {
+  loading: false,
+  success: false,
+  error: false,
+  message: "",
+  detail: {},
+  isAuthenticated: false,
+};
 
-  const initialState = {
-    loading: false,
-    error: false,
-    success: false,
-    detail: {},
-    isAuthenticated: false,
-  }
+const AuthProvider = (props) => {
 
   const router = useRouter();    
   const [ state, setState ] = useState(initialState);
@@ -53,10 +48,8 @@ const AuthProvider = (props) => {
   const initialize = async () => {
     try {
       const accessToken = window.localStorage.getItem("accessToken");
-      console.log("$:/context/auth/initialize/accesstoken ", accessToken);
 
       if(accessToken && isValidToken(accessToken)){
-        console.log("$:/context/auth/initialize/validtoken");
         setSession(accessToken);
         
         setState({
@@ -64,7 +57,6 @@ const AuthProvider = (props) => {
           isAuthenticated: true,
         });
       } else {
-        console.log("$:/context/auth/initialize/invalidtoken");
         setState({
           ...state,
           isAuthenticated: false,
@@ -72,24 +64,75 @@ const AuthProvider = (props) => {
         router.push("/auth/signin");
       }
     } catch (err) {
-      console.log("$:/context/auth/initialize/err ", err);
+      setState({
+        ...state,
+        isAuthenticated: false,
+        detail: {}
+      })
     };
   };
 
-  const signIn = async (email, password) => {
+  const signIn = async ({email, password}) => {
 
-    let body = { email, password };
-    const response = await axios.post("/users/login", body);
+    setState({
+      ...state,
+      loading: true,
+      success: false, 
+      message: "",
+    });
 
-    console.log("$:/context/auth/signin/response ", response);
+    var config = {
+      url: "/users/login",
+      method: "post",
+      data: { email, password }
+    };
+
+    try {
+      const response = await axios(config);
+      const { accessToken, data } = response.data;
+
+      setSession(accessToken);
+      setState({
+        ...state,
+        success: true,
+        detail: data,
+        loading: false,
+        isAuthenticated: true,
+      });
+      router.push("/");
+    } catch (err) {
+      setState({
+        ...state,
+        success: false,
+        message: err,
+        loading: false,
+      });
+    };
   };
 
   const signUp = async (email, password) => {
 
     let body = { email, password };
-    const response = await axios.post("/users/login", body);
+    try {
+      const response = await axios.post("/users/login", body);
+      console.log("$:/context/auth/signin/response ", response);
+    } catch (err) {
+      console.log("$:/context/auth/signin/error ", err);
+    }
+  };
 
-    console.log("$:/context/auth/signin/response ", response);
+  const signOut = () => {
+    setSession(null);
+    setState({
+      ...state,
+      loading: false,
+      success: false,
+      error: false,
+      message: "",
+      isAuthenticated: false,
+      detail: {}
+    });
+    router.push("/auth/signin");
   };
 
   return (
@@ -97,6 +140,7 @@ const AuthProvider = (props) => {
       value={{
         state,
         signIn,
+        signOut,
         signUp,
       }}
     >
